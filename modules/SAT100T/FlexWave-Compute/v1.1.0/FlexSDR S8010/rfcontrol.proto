@@ -1,0 +1,620 @@
+syntax = "proto3";
+
+package rfcontrol;
+
+service RFController {
+    rpc setRFSettings (RFRequest) returns (RFResponse);
+    rpc getDeviceStatus (DeviceRequest) returns (DeviceStatusResponse);
+    rpc getPPString (DeviceRequest) returns (PPStringResponse);
+    rpc getGainRange (DeviceRequest) returns (RangeResponse);
+    rpc getFrequencyRange (DeviceRequest) returns (RangeResponse);
+
+    rpc getUSBList (USBRequest) returns (USBResponse);
+    rpc getNMap (NMapRequest) returns (NMapResponse);
+    rpc runCustomCmd (CustomRequest) returns (CustomResponse);
+
+    // RFPlatformService Definitions //
+    rpc GetDeviceInformation (DeviceInformationRequest) returns (DeviceInformationResponse);
+    rpc GetDeviceTemps (GetDeviceTempsRequest) returns (GetDeviceTempsResponse);
+    rpc AuroraChangeStream (AuroraChangeStreamRequest) returns (AuroraChangeStreamResponse);
+    rpc AuroraResetStream (AuroraResetStreamRequest) returns (AuroraResetStreamResponse);
+    rpc GetTriggerStatus (GetTriggerStatusRequest) returns (GetTriggerStatusResponse);
+    rpc SetTriggerWait (SetTriggerWaitRequest) returns (SetTriggerWaitResponse);
+    rpc ResetTrigger (ResetTriggerRequest) returns (ResetTriggerResponse);
+    rpc SetMaxTriggerLength (SetMaxTriggerLengthRequest) returns (SetMaxTriggerLengthResponse);
+    rpc GetGPSLastLocInfo (GetGPSLastLocInfoRequest) returns (GetGPSLastLocInfoResponse);
+    rpc GetGPSUTCStartTime (GetGPSUTCStartTimeRequest) returns (GetGPSUTCStartTimeResponse);
+    rpc SetGPSUTCStartTime (SetGPSUTCStartTimeRequest) returns (SetGPSUTCStartTimeResponse);
+    rpc StartGPSPoll (StartGPSPollRequest) returns (StartGPSPollResponse);
+    rpc StopGPSPoll (StopGPSPollRequest) returns (StopGPSPollResponse);
+    
+    // RFConfigService Definitions //
+    rpc RFDCSendWaveform (RFDCSendWaveformRequest) returns (RFDCSendWaveformResponse);
+    rpc RFDCCaptureWaveform (RFDCCaptureWaveformRequest) returns (RFDCCaptureWaveformResponse);
+    rpc GetRFDCCenterFrequency (GetRFDCCenterFrequencyRequest) returns (GetRFDCCenterFrequencyResponse);
+    rpc SetRFDCCenterFrequency (SetRFDCCenterFrequencyRequest) returns (SetRFDCCenterFrequencyResponse);
+    rpc GetRFDCGain (GetRFDCGainRequest) returns (GetRFDCGainResponse);
+    rpc SetRFDCGain (SetRFDCGainRequest) returns (SetRFDCGainResponse);
+    rpc GetRFDCBackgroundCalibrationState (GetRFDCBackgroundCalibrationStateRequest) returns (GetRFDCBackgroundCalibrationStateResponse);
+    rpc SetRFDCBackgroundCalibrationState (SetRFDCBackgroundCalibrationStateRequest) returns (SetRFDCBackgroundCalibrationStateResponse);
+    rpc GetRFDCCalibrationBypass (GetRFDCCalibrationBypassRequest) returns (GetRFDCCalibrationBypassResponse);
+    rpc SetRFDCCalibrationBypass (SetRFDCCalibrationBypassRequest) returns (SetRFDCCalibrationBypassResponse);
+    rpc GetRFDCCalibrationCoefficients (GetRFDCCalibrationCoefficientsRequest) returns (GetRFDCCalibrationCoefficientsResponse);
+    rpc SetRFDCCalibrationCoefficients (SetRFDCCalibrationCoefficientsRequest) returns (SetRFDCCalibrationCoefficientsResponse);
+    rpc GetRFTileSampleRate (GetRFTileSampleRateRequest) returns (GetRFTileSampleRateResponse);
+    rpc SetRFTileSampleRate (SetRFTileSampleRateRequest) returns (SetRFTileSampleRateResponse);
+    rpc GetRFTileShutdownStatus (GetRFTileShutdownStatusRequest) returns (GetRFTileShutdownStatusResponse);
+    rpc SetRFTileShutdownStatus (SetRFTileShutdownStatusRequest) returns (SetRFTileShutdownStatusResponse);
+    
+    
+    /*
+    * Not needed APIs. Commented out if can make use in the future if needed 
+    *
+    * rpc GetRFDCEnableStatus (GetRFDCEnableStatusRequest) returns (GetRFDCEnableStatusResponse);
+    * rpc SetRFDCEnableStatus (SetRFDCEnableStatusRequest) returns (SetRFDCEnableStatusResponse);
+    * rpc GetRFDCiBW (GetRFDCiBWRequest) returns (GetRFDCiBWResponse);
+    * rpc SetRFDCiBW (SetRFDCiBWRequest) returns (SetRFDCiBWResponse);
+    * 
+    */
+
+    // New RPC for SCPI command processing
+    rpc ProcessSCPICommand(SCPICommandRequest) returns (SCPICommandResponse);
+
+}
+
+
+
+// Enum Definitions //
+enum RFDC {
+    TX1 = 0;
+    TX2 = 1;
+    TX3 = 2;
+    TX4 = 3;
+    TX5 = 4;
+    TX6 = 5;
+    TX7 = 6;
+    TX8 = 7;
+    RX1 = 8;
+    RX2 = 9;
+    RX3 = 10;
+    RX4 = 11;
+    RX5 = 12;
+    RX6 = 13;
+    RX7 = 14;
+    RX8 = 15;
+    WRX1 = 16;
+    WRX2 = 17;
+}
+
+enum RFTile {
+    TXT1 = 0;
+    TXT2 = 1;
+    RXT1 = 2;
+    RXT2 = 3;
+    WRXT = 4;
+}
+
+
+
+// Cluster Definitions //
+message TemperatureReadings {
+    double PL_temp = 1;
+    double APU_temp = 2;
+    double RPU_temp = 3;
+}
+
+
+
+// RFPlatformService Definitions //
+
+message DeviceInformationRequest {
+    string device_id = 1;
+    bool error_queue_populate = 2;
+}
+
+message DeviceInformationResponse {
+    string reply_information = 1;
+    string manufacturer  = 2;
+    string model = 3;
+    int32 serial_number = 4;
+    string firmware_revision = 5;
+}
+
+message GetDeviceTempsRequest {
+    string device_id = 1;
+    bool error_queue_populate = 2; 
+} 
+
+message GetDeviceTempsResponse {
+    TemperatureReadings temp_readings = 1;
+    int32   error_status       = 2;
+    string  error_message      = 3; 
+} 
+
+message AuroraChangeStreamRequest {
+    string device_id = 1;
+    string stream_type = 2;
+    bool error_queue_populate = 3; 
+} 
+
+message AuroraChangeStreamResponse {
+    string stream_type = 1;
+    int32   error_status = 2;
+    string  error_message = 3; 
+} 
+
+message AuroraResetStreamRequest {
+    string device_id = 1;
+    bool error_queue_populate = 2; 
+} 
+
+message AuroraResetStreamResponse {
+    int32   error_status = 1;
+    string  error_message = 2; 
+} 
+
+message GetTriggerStatusRequest {
+    string device_id = 1;
+    int32 quad_num = 2;
+    int32 channel_num = 3;
+    bool error_queue_populate = 4; 
+} 
+
+message GetTriggerStatusResponse {
+    int32 quad_num = 1;
+    int32 channel_num = 2;
+    bool triggered = 3;
+    bool wait_for_trig = 4;
+    int32 trig_sample_delay = 5;
+    bool is_hardware_trig = 6;
+    int32 max_trig_length = 7;
+    int32 error_status = 8;
+    string error_message = 9;
+} 
+
+message SetTriggerWaitRequest {
+    string device_id = 1;
+    int32 quad_num = 2;
+    int32 channel_num = 3;
+    int32 trig_sample_delay = 4;
+    bool is_hardware_trig = 5;
+    bool error_queue_populate = 6; 
+}
+
+message SetTriggerWaitResponse {
+    int32 quad_num = 1;
+    int32 channel_num = 2;
+    int32 trig_sample_delay = 3;
+    bool is_hardware_trig = 4;
+    int32 error_status = 5;
+    string error_message = 6;
+} 
+
+message ResetTriggerRequest {
+    string device_id = 1;
+    int32 quad_num = 2;
+    int32 channel_num = 3;
+    bool error_queue_populate = 4; 
+} 
+
+message ResetTriggerResponse {
+    int32 quad_num = 1;
+    int32 channel_num = 2;
+    int32 error_status = 3;
+    string error_message = 4;
+} 
+
+message SetMaxTriggerLengthRequest {
+    string device_id = 1;
+    int32 quad_num = 2;
+    int32 channel_num = 3;
+    int32 max_trig_length = 4;
+    bool error_queue_populate = 5; 
+} 
+
+message SetMaxTriggerLengthResponse {
+    int32 quad_num = 1;
+    int32 channel_num = 2;
+    int32 max_trig_length = 4;
+    int32 error_status = 5;
+    string error_message = 6;
+} 
+
+message GetGPSLastLocInfoRequest {
+    string device_id = 1;
+    int32 num_of_samples = 2;
+    bool error_queue_populate = 3; 
+}
+
+message GetGPSLastLocInfoResponse {
+    repeated double time = 1;
+    repeated double ecef_x = 2;
+    repeated double ecef_y = 3;
+    repeated double ecef_z = 4;
+    int32 error_status = 5;
+    string error_message = 6;
+}
+
+message GetGPSUTCStartTimeRequest {
+    string device_id = 1;
+    bool error_queue_populate = 2; 
+}
+
+message GetGPSUTCStartTimeResponse {
+    double utc_start_time = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+message SetGPSUTCStartTimeRequest {
+    string device_id = 1;
+    double utc_start_time = 2;
+    bool error_queue_populate = 3; 
+}
+
+message SetGPSUTCStartTimeResponse {
+    double utc_start_time = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+message StartGPSPollRequest {
+    string device_id = 1;
+    bool error_queue_populate = 2; 
+}
+
+message StartGPSPollResponse {
+    bool gps_poll_status = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+message StopGPSPollRequest {
+    string device_id = 1;
+    bool error_queue_populate = 2; 
+}
+
+message StopGPSPollResponse {
+    bool gps_poll_status = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+
+
+// RFConfigService Definitions //
+
+message RFDCSendWaveformRequest {
+    string device_id = 1;
+    RFDC rfdc = 2;
+    string waveform_type = 3;
+    bool error_queue_populate = 4;
+}
+
+message RFDCSendWaveformResponse {
+    string waveform_type = 1;
+    int32   error_status       = 2;
+    string  error_message      = 3;
+}
+
+message RFDCCaptureWaveformRequest {
+    string device_id = 1;
+    RFDC rfdc = 2;
+    int32 num_of_samples = 3;
+    bool error_queue_populate = 4;
+}
+
+message RFDCCaptureWaveformResponse {
+    repeated double I = 1;
+    repeated double Q = 2;
+    int32   error_status       = 3;
+    string  error_message      = 4;
+}
+
+message GetRFDCCenterFrequencyRequest {
+    string device_id = 1;
+    RFDC rfdc = 2; 
+    bool error_queue_populate = 3;
+}
+
+message GetRFDCCenterFrequencyResponse {
+    double  center_frequency   = 1;
+    int32   error_status       = 2;
+    string  error_message      = 3;   
+}
+
+message SetRFDCCenterFrequencyRequest {
+    string device_id = 1;
+    RFDC rfdc = 2;
+    double center_frequency = 3;
+    bool error_queue_populate = 4;
+}
+
+message SetRFDCCenterFrequencyResponse {
+    double center_frequency = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+message GetRFDCGainRequest {
+    string device_id = 1;
+    RFDC rfdc = 2; 
+    bool error_queue_populate = 3;
+}
+
+message GetRFDCGainResponse {
+    double gain = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+message SetRFDCGainRequest {
+    string device_id = 1;
+    RFDC rfdc = 2; 
+    double gain = 3;
+    bool error_queue_populate = 4;
+}
+
+message SetRFDCGainResponse {
+    double gain = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+message GetRFDCBackgroundCalibrationStateRequest {
+    string device_id = 1;
+    RFDC rfdc = 2; 
+    bool error_queue_populate = 3;
+}
+
+message GetRFDCBackgroundCalibrationStateResponse {
+    bool is_frozen = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+message SetRFDCBackgroundCalibrationStateRequest {
+    string device_id = 1;
+    RFDC rfdc = 2; 
+    bool is_frozen = 3;
+    bool error_queue_populate = 4;
+}
+
+message SetRFDCBackgroundCalibrationStateResponse {
+    bool is_frozen = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+message GetRFDCCalibrationBypassRequest {
+    string device_id = 1;
+    RFDC rfdc = 2; 
+    bool error_queue_populate = 3;
+}
+
+message GetRFDCCalibrationBypassResponse {
+    bool bypass_cal = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+message SetRFDCCalibrationBypassRequest {
+    string device_id = 1;
+    RFDC rfdc = 2; 
+    bool bypass_cal = 3;
+    bool error_queue_populate = 4;
+}
+
+message SetRFDCCalibrationBypassResponse {
+    bool bypass_cal = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+message GetRFDCCalibrationCoefficientsRequest {
+    string device_id = 1;
+    RFDC rfdc = 2; 
+    bool error_queue_populate = 3;
+}
+
+message GetRFDCCalibrationCoefficientsResponse {
+    repeated int32 coeff_re = 1;
+    repeated int32 coeff_im = 2;
+    int32 error_status = 3;
+    string error_message = 4;
+}
+
+message SetRFDCCalibrationCoefficientsRequest {
+    string device_id = 1;
+    RFDC rfdc = 2; 
+    repeated int32 coeff_re = 3;
+    repeated int32 coeff_im = 4;
+    bool error_queue_populate = 5;
+}
+
+message SetRFDCCalibrationCoefficientsResponse {
+    repeated int32 coeff_re = 1;
+    repeated int32 coeff_im = 2;
+    int32 error_status = 3;
+    string error_message = 4;
+}
+
+message GetRFTileSampleRateRequest {
+    string device_id = 1;
+    RFTile rftile = 2; 
+    bool error_queue_populate = 3;
+}
+
+message GetRFTileSampleRateResponse {
+    double sample_rate = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+message SetRFTileSampleRateRequest {
+    string device_id = 1;
+    RFTile rftile = 2; 
+    double sample_rate = 3;
+    bool error_queue_populate = 4;
+}
+
+message SetRFTileSampleRateResponse {
+    double sample_rate = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+message GetRFTileShutdownStatusRequest {
+    string device_id = 1;
+    RFTile rftile = 2; 
+    bool error_queue_populate = 3;
+}
+
+message GetRFTileShutdownStatusResponse {
+    bool shutdown_status = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+message SetRFTileShutdownStatusRequest {
+    string device_id = 1;
+    RFTile rftile = 2; 
+    bool shutdown_status = 3;
+    bool error_queue_populate = 4;
+}
+
+message SetRFTileShutdownStatusResponse {
+    bool shutdown_status = 1;
+    int32 error_status = 2;
+    string error_message = 3;
+}
+
+/*
+ * Not needed APIs. Commented out if can make use in the future if needed 
+ *
+ * message GetRFDCEnableStatusRequest {
+ *   string device_id = 1;
+ *   RFDC rfdc = 2; 
+ *   bool error_queue_populate = 3;
+ * }
+ *
+ * message GetRFDCEnableStatusResponse {
+ *   bool enable_status = 1;
+ *   int32 error_status = 2;
+ *   string error_message = 3;
+ * }
+ *
+ * message SetRFDCEnableStatusRequest {
+ *   string device_id = 1;
+ *   RFDC rfdc = 2; 
+ *   bool new_enable_status = 3;
+ *   bool error_queue_populate = 4;
+ * }
+ *
+ * message SetRFDCEnableStatusResponse {
+ *   bool enable_status = 1;
+ *   int32 error_status = 2;
+ *   string error_message = 3;
+ * }
+ *
+ * message GetRFDCiBWRequest {
+ *   string device_id = 1;
+ *   RFDC rfdc = 2; 
+ *   bool error_queue_populate = 3;
+ * }
+ *
+ * message GetRFDCiBWResponse {
+ *   double ibw = 1;
+ *   int32 error_status = 2;
+ *   string error_message = 3;
+ * }
+ *
+ * message SetRFDCiBWRequest {
+ *   string device_id = 1;
+ *   RFDC rfdc = 2; 
+ *   double ibw = 3;
+ *   bool error_queue_populate = 4;
+ *   bool override_enable_status = 5;
+ * }
+ *
+ * message SetRFDCiBWResponse {
+ *   double ibw = 1;
+ *   int32 error_status = 2;
+ *   string error_message = 3;
+ * }
+ *
+ *
+ */
+
+// VISA SCPI Support Definitions //
+message SCPICommandRequest {
+    string command_string = 1;
+}
+
+message SCPICommandResponse {
+    string response_string = 1;
+}
+
+
+
+// Siliconova Example Definitions //
+message RFRequest {
+    string device_id = 1;
+    double frequency = 2;
+    double gain = 3;
+}
+
+message RFResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message DeviceRequest {
+    string device_id = 1;
+}
+
+message DeviceStatusResponse {
+    string device_id = 1;
+    double frequency = 2;
+    double gain = 3;
+    bool ref_locked = 4;
+    bool lo_locked = 5;
+}
+
+message RangeResponse {
+    double min_value = 1;
+    double max_value = 2;
+}
+
+message PPStringResponse {
+    string pp_string = 1;
+}
+
+
+message USBRequest {
+    string usbhost = 2;
+}
+
+message USBResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message NMapRequest {
+    string  nmapHost = 1;
+}
+
+message NMapResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message CustomRequest {
+    string customCmdName = 1;
+}
+
+message CustomResponse {
+    bool success = 1;
+    string message = 2;
+	string error = 3;
+}
